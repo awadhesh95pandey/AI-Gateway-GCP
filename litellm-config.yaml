@@ -28,7 +28,8 @@ data:
           vertex_location: "us-central1"
     
     general_settings:
-      master_key: "sk-1234"
+      # Temporarily disable master key for testing
+      # master_key: "sk-1234"
       database_url: "postgresql://litellm:password@postgres-service.litellm.svc.cluster.local:5432/litellm"
       ui_username: "admin"
       ui_password: "admin123" 
