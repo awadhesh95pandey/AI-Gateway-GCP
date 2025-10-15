@@ -1,0 +1,10 @@
+# ============================================
+# 1. NAMESPACE CREATION
+# ============================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: litellm
+  labels:
+    name: litellm
+    app: litellm-gateway
