@@ -28,12 +28,11 @@ data:
           vertex_location: "us-central1"
     
     general_settings:
-      master_key: "sk-1234"
+      # Temporarily disable master key for testing
+      # master_key: "sk-1234"
       database_url: "postgresql://litellm:password@postgres-service.litellm.svc.cluster.local:5432/litellm"
       ui_username: "admin"
-      ui_password: "admin123"
-      # Allow health endpoint without authentication
-      public_routes: ["/health", "/health/livenessProbe", "/health/readinessProbe"] 
+      ui_password: "admin123" 
     
     litellm_settings:
       drop_params: true
