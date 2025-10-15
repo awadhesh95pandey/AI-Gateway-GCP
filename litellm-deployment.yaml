@@ -1,0 +1,89 @@
+# ============================================
+# 4. LITELLM DEPLOYMENT
+# ============================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litellm-proxy
+  namespace: litellm
+  labels:
+    app: litellm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: litellm
+  template:
+    metadata:
+      labels:
+        app: litellm
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:15
+        command:
+        - sh
+        - -c
+        - |
+          until pg_isready -h postgres-service.litellm.svc.cluster.local -p 5432 -U litellm; do
+            echo "Waiting for postgres..."
+            sleep 2
+          done
+      containers:
+      - name: litellm
+        image: ghcr.io/berriai/litellm:main-latest
+        ports:
+        - containerPort: 4000
+          name: http
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: vertex-key.json
+        - name: DATABASE_URL
+          value: "postgresql://litellm:password@postgres-service.litellm.svc.cluster.local:5432/litellm"
+        - name: STORE_MODEL_IN_DB
+          value: "True"
+        command:
+        - litellm
+        - --config
+        - /app/config.yaml
+        - --port
+        - "4000"
+        - --num_workers
+        - "4"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config.yaml
+          subPath: config.yaml
+        - name: vertex-credentials
+          mountPath: /secrets
+          readOnly: true
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      - name: config-volume
+        configMap:
+          name: litellm-config
+      - name: vertex-credentials
+        secret:
+          secretName: vertex-ai-credentials

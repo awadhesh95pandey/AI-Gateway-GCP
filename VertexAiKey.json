@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "pdlgcpcloud",
+  "private_key_id": "drfgrrdty54746764788777",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nO\ngEHzDXa45U0G9DbuXrKagJNTRn1p\ntiUeDYSSICU8d81w/ZQxUa/+RhGEvzVH+ZkN7pnvQ2Woa9gRnxZGm8XGQEsFGdZa\n2uQsmMYhAgMBAAECggEAAtsgQKVGgTK+ZIULNMuzp4K6g6j7htN6bLlWRV3f/RKV\n5TOIXk1TgrXOHdx3s6AV6g3X61QBZIiVtAbOBu9zstj5ilMmiNZ0+agQg68EGiI3\nRdgbc4/UWQsobJH1FIYOSBLudJBxC6P7lM2KyqrHhNvf5ACXHnlkD/H1m7nwFq4F\nCDdFG+ckjtB3XiPWc8EmEcpJeg1KgyZtpATJij25F6XI4T2R/zsxfn7JGDOYeiYF\n+4oaMaBlEP+pgqTeKJkW0B3H6ST/W/fs20o37QqSAFpnpOkEckas94RiRBVsvvwl\nL0Q/veHPkbc42BKT6NGFlAoEwCHlo55i2Hl1YalB6QKBgQDDRW+A+Y0rMuAQg/6v\niaLoJq8WhwyjIlSNPRKULz9lP2VMNsM2DehzIZhAU98BINYwHUCeg3j0zy/kkeL2\n3+02LOHBq+U8hIzkJHR390sq6kaGun/839Mbw3Ay31FzASoDTOuiVGJbb2R3Nrgj\nTUxykz/CBGsfTAG3PH2iu90MNQKBgQC9aPsl4w49icafDJwU2TIASB8tf7FnVMWz\nKQ5XgYeBjhhLYT84r3L6wg28ICsRly7BsoVU9UiZMX5y8ge4dOH8ls0QwvQpqTjk\nauLIRWOW1IceZWHCrTO1v4Wk8fZVHuxnv0qgpBjZ6Yh3bSwmtTguNg6xbIk8au+F\nNdHGAtYXvQKBgQCze4kH1VjKUhLdW1WnZy0TkSrx2+PjtlRdFbuT9PGiUGj9aoB3\nmMUFveVBi1W4pcP5qYmRqWpuKlntD6K8JArW9t3ys9saiwMtV8ytz+GJapi0kYu+\nlMRoCnWAbP9iY7mIGxWiuUlGndaMNQF/gTc5QNsjrAgCVkxlbfZUs7Rz2QKBgFX7\n7V8ypwlKnU8gk05nlupH01d9S1SkSCdf8PHKjHBEyESX/fJGu4SYSVHorISMxB4M\nY7jArNdWf5fAxb532QsojikYx2yONJSE7TSLQ316N2iWD34n0HymWA4cBX54zkr+\nrOsl814hROEqP0vHIpzfz2W95sL1rIwldXhVW0llAoGBAI7lGuRURv7AJk5QZ3wt\n6IXn3xJG2lVpVY+TJBK1AIPVZbEsPMglB/0FwJiQV07rEyR367oWUSL9S2QiKtHg\n1s9LitFXqNjF6vHOaDwodfXpDEoyPX7O/Bbb2BBjpUtKoTMGk1jAxkiycTuw8fSS\nt4hbNFmO8CwZQ084/qqrQkny\n-----END PRIVATE KEY-----\n",
+  "client_email": "vertexai@pdlgcpcloud.iam.gserviceaccount.com",
+  "client_id": "1043598687684317464288",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/vertexai%40pdlgcpcloud.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
