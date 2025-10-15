@@ -179,6 +179,14 @@ test_deployment() {
     fi
 }
 
+# Restart deployment function
+restart_deployment() {
+    print_status "Restarting LiteLLM deployment..."
+    kubectl rollout restart deployment/litellm-proxy -n litellm
+    kubectl rollout status deployment/litellm-proxy -n litellm --timeout=300s
+    print_success "Deployment restarted successfully!"
+}
+
 # Cleanup function
 cleanup() {
     print_status "Cleaning up LiteLLM deployment..."
@@ -210,12 +218,16 @@ main() {
         "test")
             test_deployment
             ;;
+        "restart")
+            restart_deployment
+            ;;
         *)
-            echo "Usage: $0 [deploy|cleanup|status|test]"
+            echo "Usage: $0 [deploy|cleanup|status|test|restart]"
             echo "  deploy  - Deploy LiteLLM Gateway (default)"
             echo "  cleanup - Remove all LiteLLM resources"
             echo "  status  - Show deployment status"
             echo "  test    - Test the deployment"
+            echo "  restart - Restart the LiteLLM deployment"
             exit 1
             ;;
     esac

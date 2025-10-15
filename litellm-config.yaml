@@ -31,7 +31,9 @@ data:
       master_key: "sk-1234"
       database_url: "postgresql://litellm:password@postgres-service.litellm.svc.cluster.local:5432/litellm"
       ui_username: "admin"
-      ui_password: "admin123" 
+      ui_password: "admin123"
+      # Allow health endpoint without authentication
+      public_routes: ["/health", "/health/livenessProbe", "/health/readinessProbe"] 
     
     litellm_settings:
       drop_params: true
