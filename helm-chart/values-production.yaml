@@ -119,9 +119,9 @@ litellm:
       # Content Safety
       content_policy: "block"
       
-      # Caching for cost optimization
-      cache: true
-      cache_type: "redis"
+      # Caching for cost optimization (DISABLED - Redis disabled)
+      cache: false
+      # cache_type: "redis"  # Disabled since Redis is disabled
     
     litellm_settings:
       drop_params: true
@@ -235,9 +235,9 @@ postgresql:
       wal_buffers: 16MB
       default_statistics_target: 100
 
-# Redis for caching and rate limiting
+# Redis for caching and rate limiting (DISABLED for initial deployment)
 redis:
-  enabled: true
+  enabled: false  # Disabled to avoid deployment issues
   image:
     repository: redis
     tag: "7-alpine"
@@ -401,4 +401,3 @@ podAnnotations:
 podLabels:
   app: litellm-gateway
   version: production
-

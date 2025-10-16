@@ -43,7 +43,7 @@ LiteLLM Gateway provides a unified OpenAI-compatible API interface for Google's 
 - 📊 **Monitoring**: Prometheus metrics, Grafana dashboards, alerting rules
 - 🔗 **Kong Integration**: Ready for Kong Gateway routing
 - 🚀 **High Availability**: Multi-replica deployment with anti-affinity
-- 💾 **Redis Caching**: Cost optimization through intelligent caching
+- 💾 **Redis Caching**: Optional cost optimization (disabled by default)
 - 🔒 **Security**: Network policies, security contexts, secret management
 
 ## 🚀 Quick Start

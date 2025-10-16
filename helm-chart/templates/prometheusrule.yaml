@@ -46,7 +46,7 @@ spec:
     {{- end }}
     {{- if eq .name "pod-memory-usage" }}
     - alert: LiteLLMHighMemoryUsage
-      expr: (container_memory_usage_bytes{pod=~"{{ include "litellm-gateway.name" . }}-.*"} / container_spec_memory_limit_bytes) * 100 > {{ .threshold }}
+      expr: (container_memory_usage_bytes{pod=~"litellm-.*"} / container_spec_memory_limit_bytes) * 100 > {{ .threshold }}
       for: 5m
       labels:
         severity: {{ .severity | default "warning" }}

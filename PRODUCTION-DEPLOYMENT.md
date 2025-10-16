@@ -83,7 +83,7 @@ helm upgrade --install litellm ./helm-chart \
 - **Grafana Ready**: Metrics ready for Grafana dashboards
 
 ### Caching & Performance
-- **Redis Caching**: Reduces API calls and costs
+- **Redis Caching**: Available but disabled by default (can be enabled later)
 - **Connection Pooling**: Efficient database connections
 - **Load Balancing**: Intelligent request routing
 
@@ -208,10 +208,11 @@ litellm:
       request_timeout: 60      # Request timeout
 ```
 
-### Redis Caching
+### Redis Caching (Optional - Disabled by Default)
 ```yaml
+# To enable Redis caching, set:
 redis:
-  enabled: true
+  enabled: true  # Change from false to true
   persistence:
     enabled: true
     size: "10Gi"
@@ -219,9 +220,11 @@ redis:
 litellm:
   config:
     general_settings:
-      cache: true
+      cache: true  # Change from false to true
       cache_type: "redis"
 ```
+
+**Note**: Redis is disabled by default to ensure smooth initial deployment. Enable it later for cost optimization.
 
 ## 🚨 Troubleshooting
 
@@ -346,4 +349,3 @@ Client → Kong Gateway → LiteLLM Gateway → Vertex AI
 ```
 
 This production deployment provides a robust, scalable, and cost-effective AI Gateway solution with comprehensive monitoring and guardrails.
-
