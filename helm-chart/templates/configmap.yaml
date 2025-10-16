@@ -14,6 +14,30 @@ data:
           model: {{ .litellm_params.model }}
           vertex_project: {{ $.Values.vertexAI.projectId }}
           vertex_location: {{ .litellm_params.vertex_location }}
+          {{- if .litellm_params.max_tokens }}
+          max_tokens: {{ .litellm_params.max_tokens }}
+          {{- end }}
+          {{- if .litellm_params.temperature }}
+          temperature: {{ .litellm_params.temperature }}
+          {{- end }}
+        {{- if .model_info }}
+        model_info:
+          {{- if .model_info.mode }}
+          mode: {{ .model_info.mode }}
+          {{- end }}
+          {{- if .model_info.max_tokens }}
+          max_tokens: {{ .model_info.max_tokens }}
+          {{- end }}
+          {{- if .model_info.rpm }}
+          rpm: {{ .model_info.rpm }}
+          {{- end }}
+          {{- if .model_info.tpm }}
+          tpm: {{ .model_info.tpm }}
+          {{- end }}
+          {{- if .model_info.max_budget }}
+          max_budget: {{ .model_info.max_budget }}
+          {{- end }}
+        {{- end }}
     {{- end }}
     
     general_settings:
@@ -21,7 +45,63 @@ data:
       database_url: {{ include "litellm-gateway.databaseUrl" . | quote }}
       ui_username: {{ .Values.litellm.config.general_settings.ui_username | quote }}
       ui_password: {{ .Values.litellm.config.general_settings.ui_password | quote }}
+      {{- if .Values.litellm.config.general_settings.max_budget }}
+      max_budget: {{ .Values.litellm.config.general_settings.max_budget }}
+      {{- end }}
+      {{- if .Values.litellm.config.general_settings.budget_duration }}
+      budget_duration: {{ .Values.litellm.config.general_settings.budget_duration | quote }}
+      {{- end }}
+      {{- if .Values.litellm.config.general_settings.rpm_limit }}
+      rpm_limit: {{ .Values.litellm.config.general_settings.rpm_limit }}
+      {{- end }}
+      {{- if .Values.litellm.config.general_settings.tpm_limit }}
+      tpm_limit: {{ .Values.litellm.config.general_settings.tpm_limit }}
+      {{- end }}
+      {{- if .Values.litellm.config.general_settings.max_tokens }}
+      max_tokens: {{ .Values.litellm.config.general_settings.max_tokens }}
+      {{- end }}
+      {{- if .Values.litellm.config.general_settings.max_retries }}
+      max_retries: {{ .Values.litellm.config.general_settings.max_retries }}
+      {{- end }}
+      {{- if .Values.litellm.config.general_settings.request_timeout }}
+      request_timeout: {{ .Values.litellm.config.general_settings.request_timeout }}
+      {{- end }}
+      {{- if .Values.litellm.config.general_settings.success_callback }}
+      success_callback: {{ .Values.litellm.config.general_settings.success_callback | toJson }}
+      {{- end }}
+      {{- if .Values.litellm.config.general_settings.failure_callback }}
+      failure_callback: {{ .Values.litellm.config.general_settings.failure_callback | toJson }}
+      {{- end }}
+      {{- if .Values.litellm.config.general_settings.content_policy }}
+      content_policy: {{ .Values.litellm.config.general_settings.content_policy | quote }}
+      {{- end }}
+      {{- if .Values.litellm.config.general_settings.cache }}
+      cache: {{ .Values.litellm.config.general_settings.cache }}
+      {{- end }}
+      {{- if and .Values.litellm.config.general_settings.cache_type .Values.redis.enabled }}
+      cache_type: {{ .Values.litellm.config.general_settings.cache_type | quote }}
+      redis_host: {{ include "litellm-gateway.name" . }}-redis
+      redis_port: {{ .Values.redis.service.port }}
+      {{- end }}
     
     litellm_settings:
       drop_params: {{ .Values.litellm.config.litellm_settings.drop_params }}
       set_verbose: {{ .Values.litellm.config.litellm_settings.set_verbose }}
+      {{- if .Values.litellm.config.litellm_settings.json_logs }}
+      json_logs: {{ .Values.litellm.config.litellm_settings.json_logs }}
+      {{- end }}
+      {{- if .Values.litellm.config.litellm_settings.content_policy_fallbacks }}
+      content_policy_fallbacks: {{ .Values.litellm.config.litellm_settings.content_policy_fallbacks | toJson }}
+      {{- end }}
+      {{- if .Values.litellm.config.litellm_settings.routing_strategy }}
+      routing_strategy: {{ .Values.litellm.config.litellm_settings.routing_strategy | quote }}
+      {{- end }}
+      {{- if .Values.litellm.config.litellm_settings.allowed_fails }}
+      allowed_fails: {{ .Values.litellm.config.litellm_settings.allowed_fails }}
+      {{- end }}
+      {{- if .Values.litellm.config.litellm_settings.cooldown_time }}
+      cooldown_time: {{ .Values.litellm.config.litellm_settings.cooldown_time }}
+      {{- end }}
+      {{- if .Values.litellm.config.litellm_settings.retry_policy }}
+      retry_policy: {{ .Values.litellm.config.litellm_settings.retry_policy | quote }}
+      {{- end }}

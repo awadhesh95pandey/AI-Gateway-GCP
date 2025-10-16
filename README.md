@@ -28,6 +28,7 @@ LiteLLM Gateway provides a unified OpenAI-compatible API interface for Google's 
 
 ## ✨ Features
 
+### Core Features
 - ✅ **OpenAI-Compatible API**: Use OpenAI SDK with Vertex AI models
 - ✅ **Helm-Based Deployment**: Professional package management
 - ✅ **Auto-Scaling**: Horizontal Pod Autoscaler with CPU/Memory targets
@@ -35,7 +36,15 @@ LiteLLM Gateway provides a unified OpenAI-compatible API interface for Google's 
 - ✅ **Persistent Storage**: PostgreSQL with persistent volumes
 - ✅ **Multiple Models**: Gemini Pro, Gemini Pro Vision, Gemini Flash
 - ✅ **Easy Configuration**: Values-based customization
-- ✅ **Monitoring**: Built-in logging and status checking
+
+### Production Features (New!)
+- 🛡️ **Cost Monitoring**: Budget limits, spend tracking, real-time alerts
+- 🛡️ **Guardrails**: Rate limiting, token limits, content filtering
+- 📊 **Monitoring**: Prometheus metrics, Grafana dashboards, alerting rules
+- 🔗 **Kong Integration**: Ready for Kong Gateway routing
+- 🚀 **High Availability**: Multi-replica deployment with anti-affinity
+- 💾 **Redis Caching**: Cost optimization through intelligent caching
+- 🔒 **Security**: Network policies, security contexts, secret management
 
 ## 🚀 Quick Start
 
@@ -45,6 +54,37 @@ LiteLLM Gateway provides a unified OpenAI-compatible API interface for Google's 
 - **Helm 3.x** installed
 - **kubectl** configured
 - **Vertex AI service account key** (`VertexAiKey.json`)
+
+## 🏭 Production Deployment (Recommended)
+
+For production deployments with guardrails, monitoring, and Kong integration:
+
+```bash
+# Clone repository
+git clone https://github.com/awadhesh95pandey/AI-Gateway-GCP.git
+cd AI-Gateway-GCP
+
+# Use production configuration
+cp helm-chart/values-production.yaml values-custom.yaml
+
+# Configure your settings (see PRODUCTION-DEPLOYMENT.md)
+# Then deploy:
+helm upgrade --install litellm ./helm-chart \
+  --values values-custom.yaml \
+  --namespace litellm \
+  --create-namespace \
+  --wait
+```
+
+📖 **See [PRODUCTION-DEPLOYMENT.md](PRODUCTION-DEPLOYMENT.md) for complete production setup guide with:**
+- Cost monitoring and budget controls
+- Rate limiting and guardrails
+- Prometheus metrics and alerting
+- Kong Gateway integration
+- High availability configuration
+- Security best practices
+
+## 🛠️ Development Deployment
 
 ### 1. Setup
 
@@ -286,4 +326,3 @@ For issues and questions:
 2. Review logs: `./helm-deploy.sh logs`
 3. Check Kubernetes events: `kubectl get events -n litellm`
 4. Open an issue in this repository
-

@@ -16,5 +16,11 @@ spec:
     targetPort: {{ .Values.litellm.service.targetPort }}
     protocol: TCP
     name: http
+  {{- if .Values.monitoring.enabled }}
+  - port: {{ .Values.monitoring.prometheus.port }}
+    targetPort: metrics
+    protocol: TCP
+    name: metrics
+  {{- end }}
   selector:
     {{- include "litellm-gateway.selectorLabels" . | nindent 4 }}
