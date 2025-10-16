@@ -1,0 +1,105 @@
+{{- if .Values.postgresql.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "litellm-gateway.name" . }}-postgresql-pvc
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "litellm-gateway.postgresql.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.postgresql.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.postgresql.persistence.size }}
+  {{- if .Values.postgresql.persistence.storageClass }}
+  storageClassName: {{ .Values.postgresql.persistence.storageClass }}
+  {{- end }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "litellm-gateway.name" . }}-postgresql
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "litellm-gateway.postgresql.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "litellm-gateway.postgresql.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "litellm-gateway.postgresql.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      containers:
+      - name: postgresql
+        image: "{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
+        imagePullPolicy: {{ .Values.postgresql.image.pullPolicy }}
+        env:
+        - name: POSTGRES_DB
+          value: {{ .Values.postgresql.auth.database }}
+        - name: POSTGRES_USER
+          value: {{ .Values.postgresql.auth.username }}
+        - name: POSTGRES_PASSWORD
+          value: {{ .Values.postgresql.auth.password }}
+        ports:
+        - containerPort: {{ .Values.postgresql.service.port }}
+          name: postgresql
+        volumeMounts:
+        - name: postgresql-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          {{- toYaml .Values.postgresql.resources | nindent 10 }}
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - exec pg_isready -U {{ .Values.postgresql.auth.username }} -d {{ .Values.postgresql.auth.database }} -h 127.0.0.1 -p {{ .Values.postgresql.service.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - exec pg_isready -U {{ .Values.postgresql.auth.username }} -d {{ .Values.postgresql.auth.database }} -h 127.0.0.1 -p {{ .Values.postgresql.service.port }}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+      volumes:
+      - name: postgresql-storage
+        {{- if .Values.postgresql.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ include "litellm-gateway.name" . }}-postgresql-pvc
+        {{- else }}
+        emptyDir: {}
+        {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "litellm-gateway.name" . }}-postgresql
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "litellm-gateway.postgresql.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.postgresql.service.type }}
+  ports:
+  - port: {{ .Values.postgresql.service.port }}
+    targetPort: postgresql
+    protocol: TCP
+    name: postgresql
+  selector:
+    {{- include "litellm-gateway.postgresql.selectorLabels" . | nindent 4 }}
+{{- end }}

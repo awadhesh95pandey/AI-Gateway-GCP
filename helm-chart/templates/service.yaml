@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "litellm-gateway.fullname" . }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "litellm-gateway.labels" . | nindent 4 }}
+  {{- with .Values.litellm.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.litellm.service.type }}
+  ports:
+  - port: {{ .Values.litellm.service.port }}
+    targetPort: {{ .Values.litellm.service.targetPort }}
+    protocol: TCP
+    name: http
+  selector:
+    {{- include "litellm-gateway.selectorLabels" . | nindent 4 }}

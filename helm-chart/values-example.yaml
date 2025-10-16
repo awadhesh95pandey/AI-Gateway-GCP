@@ -1,0 +1,71 @@
+# Example values file for LiteLLM Gateway deployment
+# Copy this file to values-custom.yaml and customize for your environment
+
+# Global settings
+global:
+  namespace: litellm
+
+# Vertex AI configuration - REQUIRED
+vertexAI:
+  # Your GCP Project ID
+  projectId: "your-gcp-project-id"
+  
+  # Base64 encoded service account key JSON
+  # To encode: cat VertexAiKey.json | base64 -w 0
+  serviceAccountKey: "ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAieW91ci1wcm9qZWN0LWlkIiwKICAicHJpdmF0ZV9rZXlfaWQiOiAiLi4uIgp9"
+  
+  # Vertex AI location
+  location: "us-central1"
+
+# LiteLLM Gateway configuration
+litellm:
+  # Authentication settings
+  env:
+    LITELLM_MASTER_KEY: "sk-your-secure-key-here"
+    UI_USERNAME: "admin"
+    UI_PASSWORD: "your-secure-password"
+  
+  # Configuration
+  config:
+    general_settings:
+      master_key: "sk-your-secure-key-here"
+      ui_username: "admin"
+      ui_password: "your-secure-password"
+  
+  # Service configuration
+  service:
+    type: LoadBalancer
+    # For internal load balancer (GCP):
+    # annotations:
+    #   cloud.google.com/load-balancer-type: "Internal"
+  
+  # Resource configuration
+  resources:
+    limits:
+      memory: "4Gi"
+      cpu: "2000m"
+    requests:
+      memory: "2Gi"
+      cpu: "1000m"
+  
+  # Autoscaling
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+
+# PostgreSQL configuration
+postgresql:
+  enabled: true
+  
+  # Database credentials
+  auth:
+    database: "litellm"
+    username: "litellm"
+    password: "your-secure-db-password"
+  
+  # Persistence
+  persistence:
+    enabled: true
+    size: "20Gi"
+    # storageClass: "ssd"  # Uncomment for SSD storage
