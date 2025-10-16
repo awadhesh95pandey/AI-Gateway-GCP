@@ -7,11 +7,10 @@ litellm:
   image:
     repository: ghcr.io/berriai/litellm
     tag: "main-latest"
-    pullPolicy: Always
-  
+    pullPolicy: IfNotPresent
+
   replicaCount: 1
-  
-  # Resource limits and requests
+
   resources:
     limits:
       memory: "4Gi"
@@ -19,15 +18,13 @@ litellm:
     requests:
       memory: "2Gi"
       cpu: "1000m"
-  
-  # Environment variables
+
   env:
     STORE_MODEL_IN_DB: "True"
     LITELLM_MASTER_KEY: "sk-1234"
     UI_USERNAME: "admin"
     UI_PASSWORD: "admin123"
-  
-  # Configuration
+
   config:
     model_list:
       - model_name: gemini-pro
@@ -45,25 +42,22 @@ litellm:
           model: vertex_ai/gemini-2.5-flash-lite
           vertex_project: "pdlgcpcloud"
           vertex_location: "us-central1"
-    
+
     general_settings:
       master_key: "sk-1234"
       database_url: ""
       ui_username: "admin"
       ui_password: "admin123"
-    
+
     litellm_settings:
       drop_params: true
       set_verbose: false
 
-  # Service configuration
   service:
     type: LoadBalancer
     port: 80
     targetPort: 4000
-    annotations: {}
 
-  # Health checks
   healthCheck:
     enabled: true
     livenessProbe:
@@ -83,7 +77,6 @@ litellm:
       timeoutSeconds: 3
       failureThreshold: 3
 
-  # Horizontal Pod Autoscaler
   autoscaling:
     enabled: true
     minReplicas: 1
@@ -98,14 +91,12 @@ postgresql:
     repository: postgres
     tag: "15"
     pullPolicy: IfNotPresent
-  
-  # Database credentials
+
   auth:
     database: "litellm"
     username: "litellm"
     password: "password"
-  
-  # Resource limits
+
   resources:
     limits:
       memory: "1Gi"
@@ -113,23 +104,20 @@ postgresql:
     requests:
       memory: "512Mi"
       cpu: "250m"
-  
-  # Persistence
+
   persistence:
     enabled: true
     size: "10Gi"
     storageClass: ""
     accessMode: ReadWriteOnce
-  
-  # Service
+
   service:
     type: ClusterIP
     port: 5432
 
-# Vertex AI configuration
 vertexAI:
   projectId: "pdlgcpcloud"
-  serviceAccountKey: "VertexAiKey.json"
+  serviceAccountKey: "/secrets/vertex-key.json"
   location: "us-central1"
 
 # Security context
@@ -138,17 +126,8 @@ securityContext:
   runAsUser: 1000
   fsGroup: 1000
 
-# Node selector
 nodeSelector: {}
-
-# Tolerations
 tolerations: []
-
-# Affinity
 affinity: {}
-
-# Pod annotations
 podAnnotations: {}
-
-# Pod labels
 podLabels: {}
