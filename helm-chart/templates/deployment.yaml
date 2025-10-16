@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "litellm-gateway.fullname" . }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "litellm-gateway.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.litellm.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "litellm-gateway.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "litellm-gateway.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      {{- if .Values.vertexAI.serviceAccountKey }}
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:15
+        command:
+        - sh
+        - -c
+        - |
+          until pg_isready -h {{ include "litellm-gateway.name" . }}-postgresql.{{ .Values.global.namespace }}.svc.cluster.local -p {{ .Values.postgresql.service.port }} -U {{ .Values.postgresql.auth.username }}; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
+      {{- end }}
+      containers:
+      - name: litellm
+        image: "{{ .Values.litellm.image.repository }}:{{ .Values.litellm.image.tag }}"
+        imagePullPolicy: {{ .Values.litellm.image.pullPolicy }}
+        command:
+        - litellm
+        - --config
+        - /app/config.yaml
+        - --port
+        - "4000"
+        - --num_workers
+        - "1"
+        ports:
+        - name: http
+          containerPort: 4000
+          protocol: TCP
+        env:
+        {{- if .Values.vertexAI.serviceAccountKey }}
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /secrets/vertex-key.json
+        {{- end }}
+        - name: DATABASE_URL
+          value: {{ include "litellm-gateway.databaseUrl" . }}
+        {{- range $key, $value := .Values.litellm.env }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
+        volumeMounts:
+        - name: config
+          mountPath: /app/config.yaml
+          subPath: config.yaml
+        {{- if .Values.vertexAI.serviceAccountKey }}
+        - name: vertex-key
+          mountPath: /secrets
+          readOnly: true
+        {{- end }}
+        resources:
+          {{- toYaml .Values.litellm.resources | nindent 10 }}
+        {{- if .Values.litellm.healthCheck.enabled }}
+        livenessProbe:
+          {{- toYaml .Values.litellm.healthCheck.livenessProbe | nindent 10 }}
+        readinessProbe:
+          {{- toYaml .Values.litellm.healthCheck.readinessProbe | nindent 10 }}
+        {{- end }}
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "litellm-gateway.fullname" . }}-config
+      {{- if .Values.vertexAI.serviceAccountKey }}
+      - name: vertex-key
+        secret:
+          secretName: {{ include "litellm-gateway.fullname" . }}-vertex-key
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

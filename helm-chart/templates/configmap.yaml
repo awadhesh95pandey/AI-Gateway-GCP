@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "litellm-gateway.fullname" . }}-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "litellm-gateway.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    model_list:
+    {{- range .Values.litellm.config.model_list }}
+      - model_name: {{ .model_name }}
+        litellm_params:
+          model: {{ .litellm_params.model }}
+          vertex_project: {{ $.Values.vertexAI.projectId }}
+          vertex_location: {{ .litellm_params.vertex_location }}
+    {{- end }}
+    
+    general_settings:
+      master_key: {{ .Values.litellm.config.general_settings.master_key | quote }}
+      database_url: {{ include "litellm-gateway.databaseUrl" . | quote }}
+      ui_username: {{ .Values.litellm.config.general_settings.ui_username | quote }}
+      ui_password: {{ .Values.litellm.config.general_settings.ui_password | quote }}
+    
+    litellm_settings:
+      drop_params: {{ .Values.litellm.config.litellm_settings.drop_params }}
+      set_verbose: {{ .Values.litellm.config.litellm_settings.set_verbose }}
