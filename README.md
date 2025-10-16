@@ -1,287 +1,279 @@
-# LiteLLM Gateway on GKE with Vertex AI
+# LiteLLM Gateway on GKE with Helm
 
-This repository contains all the necessary configuration files and deployment scripts to deploy LiteLLM Gateway on Google Kubernetes Engine (GKE) with Vertex AI integration and PostgreSQL database.
+This repository contains a production-ready Helm chart for deploying LiteLLM Gateway on Google Kubernetes Engine (GKE) with Vertex AI integration.
+
+## 🚀 Overview
+
+LiteLLM Gateway provides a unified OpenAI-compatible API interface for Google's Vertex AI models. This Helm deployment includes:
+
+- **LiteLLM Proxy Server**: Main gateway service with auto-scaling
+- **PostgreSQL Database**: Persistent storage for configuration and usage data
+- **Vertex AI Integration**: Direct connection to Google's AI models
+- **Production Features**: Health checks, monitoring, security contexts
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   LoadBalancer  │    │  LiteLLM Gateway│    │   PostgreSQL    │
-│    Service      │───▶│     Pod         │───▶│    Database     │
-│                 │    │                 │    │                 │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Client Apps   │───▶│  LiteLLM Gateway │───▶│   Vertex AI     │
+│  (OpenAI SDK)   │    │   (Kubernetes)   │    │   (Gemini Pro)  │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
                               │
                               ▼
-                       ┌─────────────────┐
-                       │   Vertex AI     │
-                       │   (Gemini Pro)  │
-                       └─────────────────┘
+                       ┌──────────────────┐
+                       │   PostgreSQL     │
+                       │  (Persistent)    │
+                       └──────────────────┘
 ```
 
-## 📋 Prerequisites
+## ✨ Features
 
-Before deploying, ensure you have:
+- ✅ **OpenAI-Compatible API**: Use OpenAI SDK with Vertex AI models
+- ✅ **Helm-Based Deployment**: Professional package management
+- ✅ **Auto-Scaling**: Horizontal Pod Autoscaler with CPU/Memory targets
+- ✅ **Production-Ready**: Resource limits, health checks, security contexts
+- ✅ **Persistent Storage**: PostgreSQL with persistent volumes
+- ✅ **Multiple Models**: Gemini Pro, Gemini Pro Vision, Gemini Flash
+- ✅ **Easy Configuration**: Values-based customization
+- ✅ **Monitoring**: Built-in logging and status checking
 
-1. **GKE Cluster**: A running GKE cluster with sufficient resources
-2. **kubectl**: Configured to connect to your GKE cluster
-3. **gcloud CLI**: Installed and authenticated
-4. **Vertex AI Service Account**: `VertexAiKey.json` file with proper permissions
-5. **LoadBalancer Quota**: Ensure your GCP project has LoadBalancer quota available
+## 🚀 Quick Start
 
-### Required GCP APIs
-Make sure these APIs are enabled in your GCP project:
-- Kubernetes Engine API
-- Vertex AI API
-- Compute Engine API
+### Prerequisites
 
-### Vertex AI Permissions
-Your service account should have these roles:
-- `roles/aiplatform.user`
-- `roles/ml.developer`
+- **Kubernetes cluster** (GKE recommended)
+- **Helm 3.x** installed
+- **kubectl** configured
+- **Vertex AI service account key** (`VertexAiKey.json`)
 
-## 📁 File Structure
-
-```
-.
-├── namespace.yaml              # Kubernetes namespace
-├── vertex-ai-secret.yaml      # Vertex AI credentials secret template
-├── postgre.yaml               # PostgreSQL deployment with PVC
-├── litellm-config.yaml        # LiteLLM configuration
-├── litellm-deployment.yaml    # LiteLLM Gateway deployment
-├── service.yaml               # LoadBalancer service
-├── deploy.sh                  # Automated deployment script
-├── VertexAiKey.json          # Your Vertex AI service account key
-└── README.md                 # This file
-```
-
-## 🚀 Quick Deployment
-
-### Option 1: Automated Deployment (Recommended)
+### 1. Setup
 
 ```bash
-# Make the script executable
-chmod +x deploy.sh
+git clone <repository-url>
+cd AI-Gateway-GCP
 
-# Deploy everything
-./deploy.sh deploy
+# Make deployment script executable
+chmod +x helm-deploy.sh
 ```
 
-### Option 2: Manual Deployment
+### 2. Configure
 
 ```bash
-# 1. Create namespace
-kubectl apply -f namespace.yaml
+# Encode your service account key
+./helm-deploy.sh encode-key
 
-# 2. Create Vertex AI secret
-kubectl create secret generic vertex-ai-credentials \
-  --from-file=vertex-key.json=VertexAiKey.json \
-  -n litellm
-
-# 3. Deploy PostgreSQL
-kubectl apply -f postgre.yaml
-
-# 4. Wait for PostgreSQL to be ready
-kubectl wait --for=condition=ready pod -l app=postgres -n litellm --timeout=300s
-
-# 5. Deploy LiteLLM configuration
-kubectl apply -f litellm-config.yaml
-
-# 6. Deploy LiteLLM Gateway
-kubectl apply -f litellm-deployment.yaml
-
-# 7. Create service
-kubectl apply -f service.yaml
-
-# 8. Wait for deployment
-kubectl wait --for=condition=available deployment/litellm-proxy -n litellm --timeout=600s
+# Create configuration file (this will prompt you to edit values)
+./helm-deploy.sh deploy
 ```
 
-## 📊 Accessing the Gateway
+Edit `values-custom.yaml` with your settings:
 
-After deployment, get the external IP:
+```yaml
+# Required: Your GCP Project ID
+vertexAI:
+  projectId: "your-gcp-project-id"
+  serviceAccountKey: "base64-encoded-key-here"
+
+# Required: Secure credentials
+litellm:
+  env:
+    LITELLM_MASTER_KEY: "sk-your-secure-key-here"
+    UI_PASSWORD: "your-secure-password"
+
+postgresql:
+  auth:
+    password: "your-secure-db-password"
+```
+
+### 3. Deploy
 
 ```bash
-kubectl get service litellm-service -n litellm
+./helm-deploy.sh deploy
 ```
 
-### Available Endpoints
+### 4. Access
 
-- **Gateway API**: `http://<EXTERNAL_IP>/v1/chat/completions`
+Get your gateway endpoints:
+
+```bash
+./helm-deploy.sh status
+```
+
+Your gateway will be available at:
+- **API**: `http://<EXTERNAL_IP>/v1/chat/completions`
 - **Admin UI**: `http://<EXTERNAL_IP>/ui`
-- **API Documentation**: `http://<EXTERNAL_IP>/docs`
-- **Health Check**: `http://<EXTERNAL_IP>/health`
+- **Docs**: `http://<EXTERNAL_IP>/docs`
+- **Health**: `http://<EXTERNAL_IP>/health`
 
-### Default Credentials
-
-- **Master Key**: `sk-1234`
-- **UI Username**: `admin`
-- **UI Password**: `admin123`
-
-## 🤖 Available Models
-
-The gateway is configured with these Vertex AI models:
-
-- **gemini-pro**: `vertex_ai/gemini-pro`
-- **gemini-pro-vision**: `vertex_ai/gemini-pro-vision`
-- **gemini-flash**: `vertex_ai/gemini-2.5-flash-lite`
-
-## 📝 Usage Examples
-
-### Using curl
+## 📋 Management Commands
 
 ```bash
-curl -X POST "http://<EXTERNAL_IP>/v1/chat/completions" \
-  -H "Authorization: Bearer sk-1234" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "gemini-pro",
-    "messages": [
-      {"role": "user", "content": "Hello, how are you?"}
-    ]
-  }'
+./helm-deploy.sh [command]
+
+Commands:
+  deploy     - Deploy LiteLLM Gateway (default)
+  status     - Show deployment status
+  test       - Test the deployment
+  logs       - Show logs from LiteLLM Gateway
+  cleanup    - Remove all resources
+  encode-key - Encode VertexAiKey.json for values file
 ```
 
-### Using Python
+## 🔧 Configuration
+
+### Available Models
+
+- **gemini-pro**: General text generation
+- **gemini-pro-vision**: Vision and multimodal tasks  
+- **gemini-flash**: Fast responses for simple queries
+
+### Resource Defaults
+
+- **LiteLLM**: 4Gi memory, 2 CPU cores
+- **PostgreSQL**: 1Gi memory, 500m CPU
+- **Storage**: 10Gi persistent volume
+- **Auto-scaling**: 1-10 replicas based on CPU/Memory
+
+### Security Features
+
+- Service account key stored as Kubernetes secret
+- Security contexts with non-root users
+- Resource limits to prevent resource exhaustion
+- Configurable network policies
+
+## 💻 Usage Examples
+
+### OpenAI SDK (Python)
 
 ```python
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-1234",
+    api_key="sk-your-master-key",
     base_url="http://<EXTERNAL_IP>/v1"
 )
 
 response = client.chat.completions.create(
     model="gemini-pro",
     messages=[
-        {"role": "user", "content": "Hello, how are you?"}
+        {"role": "user", "content": "Hello from Kubernetes!"}
     ]
 )
 
 print(response.choices[0].message.content)
 ```
 
-## 🔧 Configuration
-
-### Environment Variables
-
-Key environment variables in the deployment:
-
-- `GOOGLE_APPLICATION_CREDENTIALS`: Path to Vertex AI service account key
-- `DATABASE_URL`: PostgreSQL connection string
-- `STORE_MODEL_IN_DB`: Enable database storage for models
-
-### Resource Limits
-
-Current resource configuration:
-
-```yaml
-resources:
-  requests:
-    memory: "512Mi"
-    cpu: "500m"
-  limits:
-    memory: "2Gi"
-    cpu: "2000m"
-```
-
-### Database Configuration
-
-- **Database**: PostgreSQL 15
-- **Storage**: 10Gi PersistentVolume
-- **Connection**: Internal cluster service
-
-## 🔍 Monitoring & Troubleshooting
-
-### Check Deployment Status
+### cURL
 
 ```bash
-# Check all resources
-./deploy.sh status
-
-# Check pods
-kubectl get pods -n litellm
-
-# Check logs
-kubectl logs -f deployment/litellm-proxy -n litellm
-kubectl logs -f deployment/postgres -n litellm
+curl -X POST "http://<EXTERNAL_IP>/v1/chat/completions" \
+  -H "Authorization: Bearer sk-your-master-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-pro",
+    "messages": [{"role": "user", "content": "What is Kubernetes?"}]
+  }'
 ```
 
-### Common Issues
+## 📊 Monitoring
 
-1. **External IP Pending**: Wait 5-10 minutes for GCP to assign the IP
-2. **Pod CrashLoopBackOff**: Check logs for configuration issues
-3. **Database Connection Failed**: Ensure PostgreSQL is running and accessible
+### View Logs
+
+```bash
+# Real-time logs
+./helm-deploy.sh logs
+
+# Specific component logs
+kubectl logs -l app.kubernetes.io/name=litellm-gateway -n litellm
+```
+
+### Check Status
+
+```bash
+# Deployment status
+./helm-deploy.sh status
+
+# Detailed pod information
+kubectl get pods -n litellm -o wide
+```
 
 ### Health Checks
 
-The deployment includes:
-- **Liveness Probe**: `/health` endpoint
-- **Readiness Probe**: `/health` endpoint
-- **Init Container**: Waits for PostgreSQL to be ready
-
-## 🧹 Cleanup
-
-To remove all resources:
-
 ```bash
-./deploy.sh cleanup
+# Test deployment
+./helm-deploy.sh test
+
+# Manual health check
+curl http://<EXTERNAL_IP>/health
 ```
 
-Or manually:
+## 🔄 Updates and Scaling
+
+### Update Configuration
+
+1. Edit `values-custom.yaml`
+2. Run: `./helm-deploy.sh deploy`
+
+### Scale Manually
 
 ```bash
-kubectl delete namespace litellm
+kubectl scale deployment litellm-litellm-gateway -n litellm --replicas=3
 ```
 
-## 🔒 Security Considerations
-
-1. **Change Default Credentials**: Update master key and UI credentials in production
-2. **Network Policies**: Consider implementing network policies for additional security
-3. **TLS/SSL**: Add TLS termination for production use
-4. **RBAC**: Implement proper RBAC for service accounts
-5. **Secret Management**: Consider using Google Secret Manager instead of Kubernetes secrets
-
-## 📈 Scaling
-
-### Horizontal Pod Autoscaler
+### Update Image
 
 ```yaml
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: litellm-hpa
-  namespace: litellm
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: litellm-proxy
-  minReplicas: 1
-  maxReplicas: 10
-  metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70
+# In values-custom.yaml
+litellm:
+  image:
+    tag: "new-version"
 ```
 
-### Database Scaling
+## 🐛 Troubleshooting
 
-For production, consider:
-- Google Cloud SQL for PostgreSQL
-- Connection pooling
-- Read replicas
+### Common Issues
+
+1. **Pods not starting**: Check resource limits and node capacity
+2. **Database connection failed**: Verify PostgreSQL is running
+3. **Vertex AI authentication failed**: Check service account key encoding
+4. **External IP not assigned**: Check LoadBalancer service and quotas
+
+### Debug Commands
+
+```bash
+# Check pod events
+kubectl describe pod <pod-name> -n litellm
+
+# Check service status
+kubectl get services -n litellm
+
+# View all events
+kubectl get events -n litellm --sort-by='.lastTimestamp'
+```
+
+## 🗑️ Cleanup
+
+```bash
+./helm-deploy.sh cleanup
+```
+
+This removes:
+- Helm release and all resources
+- Namespace and persistent volumes
+- LoadBalancer and external IPs
+
+## 📚 Documentation
+
+- **[HELM-README.md](./HELM-README.md)** - Detailed Helm chart documentation
+- **[values-example.yaml](./helm-chart/values-example.yaml)** - Configuration examples
+- **[LiteLLM Docs](https://docs.litellm.ai/)** - Official LiteLLM documentation
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Test the deployment
-5. Submit a pull request
+3. Test your changes with the Helm chart
+4. Submit a pull request
 
 ## 📄 License
 
@@ -290,7 +282,8 @@ This project is licensed under the MIT License.
 ## 🆘 Support
 
 For issues and questions:
-1. Check the troubleshooting section
-2. Review LiteLLM documentation
-3. Check GKE and Vertex AI documentation
+1. Check the [troubleshooting section](#-troubleshooting)
+2. Review logs: `./helm-deploy.sh logs`
+3. Check Kubernetes events: `kubectl get events -n litellm`
 4. Open an issue in this repository
+
