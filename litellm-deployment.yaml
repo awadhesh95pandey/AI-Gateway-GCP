@@ -42,6 +42,12 @@ spec:
           value: "postgresql://litellm:password@postgres-service.litellm.svc.cluster.local:5432/litellm"
         - name: STORE_MODEL_IN_DB
           value: "True"
+        - name: LITELLM_MASTER_KEY
+          value: "sk-1234"
+        - name: UI_USERNAME
+          value: "admin"
+        - name: UI_PASSWORD
+          value: "admin123"
         command:
         - litellm
         - --config
