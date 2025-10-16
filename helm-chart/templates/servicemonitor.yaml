@@ -1,0 +1,25 @@
+{{- if and .Values.monitoring.enabled .Values.monitoring.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "litellm-gateway.name" . }}-metrics
+  namespace: {{ .Values.monitoring.serviceMonitor.namespace | default .Values.global.namespace }}
+  labels:
+    {{- include "litellm-gateway.labels" . | nindent 4 }}
+    {{- with .Values.monitoring.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "litellm-gateway.selectorLabels" . | nindent 6 }}
+  endpoints:
+  - port: metrics
+    path: {{ .Values.monitoring.prometheus.path }}
+    interval: {{ .Values.monitoring.serviceMonitor.interval }}
+    scrapeTimeout: 10s
+    honorLabels: true
+  namespaceSelector:
+    matchNames:
+    - {{ .Values.global.namespace }}
+{{- end }}

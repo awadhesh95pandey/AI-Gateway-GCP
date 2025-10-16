@@ -1,0 +1,404 @@
+# Production-ready values for litellm-gateway with guardrails and monitoring
+# This is a YAML-formatted file.
+
+# Global settings
+global:
+  namespace: litellm
+
+# LiteLLM Gateway configuration with enhanced features
+litellm:
+  image:
+    repository: ghcr.io/berriai/litellm
+    tag: "main-latest"
+    pullPolicy: Always
+  
+  replicaCount: 2  # Increased for high availability
+  
+  # Enhanced resource limits and requests
+  resources:
+    limits:
+      memory: "4Gi"
+      cpu: "2000m"
+    requests:
+      memory: "2Gi"
+      cpu: "1000m"
+  
+  # Environment variables with guardrails and monitoring
+  env:
+    STORE_MODEL_IN_DB: "True"
+    LITELLM_MASTER_KEY: "sk-your-secure-key"
+    UI_USERNAME: "admin"
+    UI_PASSWORD: "your-secure-password"
+    
+    # Cost & Usage Tracking
+    LITELLM_LOG: "True"
+    LITELLM_LOG_LEVEL: "INFO"
+    SPEND_LOGS: "True"
+    
+    # Rate Limiting & Guardrails
+    MAX_BUDGET: "1000"  # $1000 monthly budget
+    BUDGET_DURATION: "30d"
+    
+    # Security & Monitoring
+    LITELLM_TELEMETRY: "True"
+    CUSTOM_HEADERS_PASS_THROUGH: "True"
+    
+    # Prometheus metrics
+    PROMETHEUS_PORT: "8080"
+  
+  # Enhanced configuration with guardrails
+  config:
+    model_list:
+      - model_name: gemini-pro
+        litellm_params:
+          model: vertex_ai/gemini-pro
+          vertex_project: ""  # Will be set from values
+          vertex_location: "us-central1"
+          # Cost controls
+          max_tokens: 4096
+          temperature: 0.7
+        model_info:
+          mode: chat
+          max_tokens: 4096
+          # Rate limiting per model
+          rpm: 100  # requests per minute
+          tpm: 10000  # tokens per minute
+          max_budget: 500  # $500 budget for this model
+      
+      - model_name: gemini-pro-vision
+        litellm_params:
+          model: vertex_ai/gemini-pro-vision
+          vertex_project: ""  # Will be set from values
+          vertex_location: "us-central1"
+          max_tokens: 2048
+          temperature: 0.7
+        model_info:
+          mode: chat
+          max_tokens: 2048
+          rpm: 50
+          tpm: 5000
+          max_budget: 300
+      
+      - model_name: gemini-flash
+        litellm_params:
+          model: vertex_ai/gemini-1.5-flash
+          vertex_project: ""  # Will be set from values
+          vertex_location: "us-central1"
+          max_tokens: 8192
+          temperature: 0.7
+        model_info:
+          mode: chat
+          max_tokens: 8192
+          rpm: 200
+          tpm: 20000
+          max_budget: 200
+    
+    general_settings:
+      master_key: "sk-your-secure-key"
+      database_url: ""  # Will be constructed from postgres values
+      ui_username: "admin"
+      ui_password: "your-secure-password"
+      
+      # Cost & Budget Controls
+      max_budget: 1000
+      budget_duration: "30d"
+      
+      # Rate Limiting (Global)
+      rpm_limit: 500  # Global RPM limit
+      tpm_limit: 50000  # Global TPM limit
+      
+      # Guardrails
+      max_tokens: 8192
+      max_retries: 3
+      request_timeout: 60
+      
+      # Logging & Monitoring
+      success_callback: ["prometheus"]
+      failure_callback: ["prometheus"]
+      
+      # Content Safety
+      content_policy: "block"
+      
+      # Caching for cost optimization
+      cache: true
+      cache_type: "redis"
+    
+    litellm_settings:
+      drop_params: true
+      set_verbose: true  # Enhanced logging
+      json_logs: true
+      
+      # Content filtering
+      content_policy_fallbacks: ["block"]
+      
+      # Router settings for load balancing
+      routing_strategy: "least-busy"
+      allowed_fails: 3
+      cooldown_time: 30
+      retry_policy: "exponential_backoff"
+
+  # Service configuration (ClusterIP for Kong integration)
+  service:
+    type: ClusterIP  # Changed for Kong integration
+    port: 4000
+    targetPort: 4000
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8080"
+      prometheus.io/path: "/metrics"
+
+  # Enhanced health checks
+  healthCheck:
+    enabled: true
+    livenessProbe:
+      httpGet:
+        path: /health/liveliness
+        port: 4000
+      initialDelaySeconds: 120  # Increased for startup
+      periodSeconds: 30
+      timeoutSeconds: 10
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /health/readiness
+        port: 4000
+      initialDelaySeconds: 60
+      periodSeconds: 15
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+  # Autoscaling with cost awareness
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+    # Custom metrics for cost-based scaling
+    behavior:
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+      scaleUp:
+        stabilizationWindowSeconds: 60
+        policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+
+# Enhanced PostgreSQL with monitoring
+postgresql:
+  enabled: true
+  image:
+    repository: postgres
+    tag: "15"
+    pullPolicy: IfNotPresent
+  
+  # Database credentials
+  auth:
+    database: "litellm"
+    username: "litellm"
+    password: "your-secure-db-password"
+  
+  # Enhanced resources for production
+  resources:
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+  
+  # Production persistence
+  persistence:
+    enabled: true
+    size: "50Gi"  # Increased for logs and metrics
+    storageClass: ""  # Use default storage class
+    accessMode: ReadWriteOnce
+  
+  # Service
+  service:
+    type: ClusterIP
+    port: 5432
+  
+  # Enhanced PostgreSQL configuration
+  postgresql:
+    configuration:
+      max_connections: 200
+      shared_buffers: 256MB
+      effective_cache_size: 1GB
+      maintenance_work_mem: 64MB
+      checkpoint_completion_target: 0.9
+      wal_buffers: 16MB
+      default_statistics_target: 100
+
+# Redis for caching and rate limiting
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: "7-alpine"
+    pullPolicy: IfNotPresent
+  
+  resources:
+    limits:
+      memory: "512Mi"
+      cpu: "250m"
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+  
+  persistence:
+    enabled: true
+    size: "10Gi"
+    storageClass: ""
+    accessMode: ReadWriteOnce
+  
+  service:
+    type: ClusterIP
+    port: 6379
+
+# Vertex AI configuration
+vertexAI:
+  # GCP Project ID
+  projectId: ""  # REQUIRED: Set your GCP project ID
+  
+  # Service Account Key (base64 encoded JSON)
+  serviceAccountKey: ""  # REQUIRED: Set your base64 encoded service account key
+  
+  # Location for Vertex AI
+  location: "us-central1"
+  
+  # Cost monitoring and quotas
+  quotas:
+    daily_request_limit: 10000
+    monthly_budget_limit: 1000
+
+# Monitoring and observability
+monitoring:
+  enabled: true
+  
+  # Prometheus metrics
+  prometheus:
+    enabled: true
+    port: 8080
+    path: /metrics
+    scrapeInterval: 30s
+  
+  # ServiceMonitor for Prometheus Operator
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring
+    labels:
+      app: litellm-gateway
+    interval: 30s
+    path: /metrics
+  
+  # Alerting rules
+  alerts:
+    enabled: true
+    rules:
+      - name: high-cost-usage
+        threshold: 800  # Alert at $800 monthly spend
+        severity: warning
+      - name: rate-limit-exceeded
+        threshold: 90   # Alert at 90% of rate limit
+        severity: warning
+      - name: error-rate-high
+        threshold: 5    # Alert at 5% error rate
+        severity: critical
+      - name: pod-memory-usage
+        threshold: 80   # Alert at 80% memory usage
+        severity: warning
+
+# Security context for GKE
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+  capabilities:
+    drop:
+    - ALL
+
+# Network policies for security
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            name: kong-system
+      - namespaceSelector:
+          matchLabels:
+            name: monitoring
+      ports:
+      - protocol: TCP
+        port: 4000
+      - protocol: TCP
+        port: 8080  # Prometheus metrics
+  egress:
+    - to: []  # Allow all outbound (for Vertex AI)
+      ports:
+      - protocol: TCP
+        port: 443
+      - protocol: TCP
+        port: 80
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: litellm-gateway-postgresql
+      ports:
+      - protocol: TCP
+        port: 5432
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: litellm-gateway-redis
+      ports:
+      - protocol: TCP
+        port: 6379
+
+# Pod disruption budget for high availability
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity rules for better pod distribution
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - litellm-gateway
+        topologyKey: kubernetes.io/hostname
+
+# Pod annotations
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+  prometheus.io/path: "/metrics"
+
+# Pod labels
+podLabels:
+  app: litellm-gateway
+  version: production
+

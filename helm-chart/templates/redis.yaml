@@ -1,0 +1,111 @@
+{{- if .Values.redis.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "litellm-gateway.name" . }}-redis-pvc
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "litellm-gateway.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  accessModes:
+    - {{ .Values.redis.persistence.accessMode | default "ReadWriteOnce" }}
+  resources:
+    requests:
+      storage: {{ .Values.redis.persistence.size }}
+  {{- if .Values.redis.persistence.storageClass }}
+  storageClassName: {{ .Values.redis.persistence.storageClass }}
+  {{- end }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "litellm-gateway.name" . }}-redis
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "litellm-gateway.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "litellm-gateway.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: redis
+  template:
+    metadata:
+      labels:
+        {{- include "litellm-gateway.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: redis
+        app.kubernetes.io/name: {{ include "litellm-gateway.name" . }}-redis
+    spec:
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      containers:
+      - name: redis
+        image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+        imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.redis.service.port }}
+          name: redis
+        command:
+        - redis-server
+        - --appendonly
+        - "yes"
+        - --save
+        - "900 1"
+        - --save
+        - "300 10"
+        - --save
+        - "60 10000"
+        volumeMounts:
+        - name: redis-storage
+          mountPath: /data
+        resources:
+          {{- toYaml .Values.redis.resources | nindent 10 }}
+        livenessProbe:
+          tcpSocket:
+            port: {{ .Values.redis.service.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 1
+          failureThreshold: 3
+      volumes:
+      - name: redis-storage
+        {{- if .Values.redis.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ include "litellm-gateway.name" . }}-redis-pvc
+        {{- else }}
+        emptyDir: {}
+        {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "litellm-gateway.name" . }}-redis
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "litellm-gateway.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  type: {{ .Values.redis.service.type | default "ClusterIP" }}
+  ports:
+  - port: {{ .Values.redis.service.port }}
+    targetPort: redis
+    protocol: TCP
+    name: redis
+  selector:
+    {{- include "litellm-gateway.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+{{- end }}

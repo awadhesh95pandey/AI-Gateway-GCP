@@ -53,6 +53,11 @@ spec:
           - name: http
             containerPort: 4000
             protocol: TCP
+          {{- if .Values.monitoring.enabled }}
+          - name: metrics
+            containerPort: {{ .Values.monitoring.prometheus.port }}
+            protocol: TCP
+          {{- end }}
         env:
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: {{ .Values.vertexAI.serviceAccountKey }}

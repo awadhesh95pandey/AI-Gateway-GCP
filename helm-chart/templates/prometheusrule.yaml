@@ -1,0 +1,90 @@
+{{- if and .Values.monitoring.enabled .Values.monitoring.alerts.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "litellm-gateway.name" . }}-alerts
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "litellm-gateway.labels" . | nindent 4 }}
+spec:
+  groups:
+  - name: litellm-gateway.rules
+    rules:
+    {{- range .Values.monitoring.alerts.rules }}
+    {{- if eq .name "high-cost-usage" }}
+    - alert: LiteLLMHighCostUsage
+      expr: litellm_total_cost_usd > {{ .threshold }}
+      for: 5m
+      labels:
+        severity: {{ .severity | default "warning" }}
+        service: litellm-gateway
+      annotations:
+        summary: "LiteLLM Gateway high cost usage detected"
+        description: "Monthly cost usage has exceeded ${{ .threshold }}. Current usage: {{ "{{ $value }}" }}"
+    {{- end }}
+    {{- if eq .name "rate-limit-exceeded" }}
+    - alert: LiteLLMRateLimitExceeded
+      expr: (litellm_requests_per_minute / litellm_rpm_limit) * 100 > {{ .threshold }}
+      for: 2m
+      labels:
+        severity: {{ .severity | default "warning" }}
+        service: litellm-gateway
+      annotations:
+        summary: "LiteLLM Gateway rate limit exceeded"
+        description: "Rate limit usage is at {{ "{{ $value }}" }}% of the configured limit"
+    {{- end }}
+    {{- if eq .name "error-rate-high" }}
+    - alert: LiteLLMHighErrorRate
+      expr: (rate(litellm_errors_total[5m]) / rate(litellm_requests_total[5m])) * 100 > {{ .threshold }}
+      for: 5m
+      labels:
+        severity: {{ .severity | default "critical" }}
+        service: litellm-gateway
+      annotations:
+        summary: "LiteLLM Gateway high error rate"
+        description: "Error rate is {{ "{{ $value }}" }}% over the last 5 minutes"
+    {{- end }}
+    {{- if eq .name "pod-memory-usage" }}
+    - alert: LiteLLMHighMemoryUsage
+      expr: (container_memory_usage_bytes{pod=~"{{ include "litellm-gateway.name" . }}-.*"} / container_spec_memory_limit_bytes) * 100 > {{ .threshold }}
+      for: 5m
+      labels:
+        severity: {{ .severity | default "warning" }}
+        service: litellm-gateway
+      annotations:
+        summary: "LiteLLM Gateway high memory usage"
+        description: "Pod {{ "{{ $labels.pod }}" }} memory usage is {{ "{{ $value }}" }}%"
+    {{- end }}
+    {{- end }}
+    
+    # Additional cost monitoring rules
+    - alert: LiteLLMDailyCostSpike
+      expr: increase(litellm_total_cost_usd[1d]) > 100
+      for: 1m
+      labels:
+        severity: warning
+        service: litellm-gateway
+      annotations:
+        summary: "LiteLLM Gateway daily cost spike detected"
+        description: "Daily cost increase of ${{ "{{ $value }}" }} detected"
+    
+    - alert: LiteLLMTokenUsageHigh
+      expr: rate(litellm_tokens_total[5m]) > 1000
+      for: 5m
+      labels:
+        severity: info
+        service: litellm-gateway
+      annotations:
+        summary: "LiteLLM Gateway high token usage"
+        description: "Token usage rate is {{ "{{ $value }}" }} tokens per second"
+    
+    - alert: LiteLLMPodDown
+      expr: up{job="litellm-gateway"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        service: litellm-gateway
+      annotations:
+        summary: "LiteLLM Gateway pod is down"
+        description: "LiteLLM Gateway pod {{ "{{ $labels.instance }}" }} has been down for more than 1 minute"
+{{- end }}
