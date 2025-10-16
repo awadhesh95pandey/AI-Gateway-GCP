@@ -1,6 +1,3 @@
-# Default values for litellm-gateway
-# This is a YAML-formatted file.
-
 # Global settings
 global:
   namespace: litellm
@@ -36,22 +33,22 @@ litellm:
       - model_name: gemini-pro
         litellm_params:
           model: vertex_ai/gemini-pro
-          vertex_project: ""  # Will be set from values
+          vertex_project: "pdlgcpcloud"
           vertex_location: "us-central1"
       - model_name: gemini-pro-vision
         litellm_params:
           model: vertex_ai/gemini-pro-vision
-          vertex_project: ""  # Will be set from values
+          vertex_project: "pdlgcpcloud"
           vertex_location: "us-central1"
       - model_name: gemini-flash
         litellm_params:
-          model: vertex_ai/gemini-1.5-flash
-          vertex_project: ""  # Will be set from values
+          model: vertex_ai/gemini-2.5-flash-lite
+          vertex_project: "pdlgcpcloud"
           vertex_location: "us-central1"
     
     general_settings:
       master_key: "sk-1234"
-      database_url: ""  # Will be constructed from postgres values
+      database_url: ""
       ui_username: "admin"
       ui_password: "admin123"
     
@@ -121,7 +118,7 @@ postgresql:
   persistence:
     enabled: true
     size: "10Gi"
-    storageClass: ""  # Use default storage class
+    storageClass: ""
     accessMode: ReadWriteOnce
   
   # Service
@@ -131,13 +128,8 @@ postgresql:
 
 # Vertex AI configuration
 vertexAI:
-  # GCP Project ID
-  projectId: ""  # REQUIRED: Set your GCP project ID
-  
-  # Service Account Key (base64 encoded JSON)
-  serviceAccountKey: ""  # REQUIRED: Set your base64 encoded service account key
-  
-  # Location for Vertex AI
+  projectId: "pdlgcpcloud"
+  serviceAccountKey: "VertexAiKey.json"
   location: "us-central1"
 
 # Security context
