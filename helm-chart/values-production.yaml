@@ -277,9 +277,9 @@ vertexAI:
     daily_request_limit: 10000
     monthly_budget_limit: 1000
 
-# Monitoring and observability
+# Monitoring and observability (DISABLED - requires Prometheus Operator)
 monitoring:
-  enabled: true
+  enabled: false  # Disabled to avoid CRD dependency issues
   
   # Prometheus metrics
   prometheus:

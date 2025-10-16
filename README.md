@@ -55,16 +55,35 @@ LiteLLM Gateway provides a unified OpenAI-compatible API interface for Google's 
 - **kubectl** configured
 - **Vertex AI service account key** (`VertexAiKey.json`)
 
-## 🏭 Production Deployment (Recommended)
+## ⚡ Quick Deployment (Recommended for Getting Started)
 
-For production deployments with guardrails, monitoring, and Kong integration:
+For immediate deployment without complex dependencies:
 
 ```bash
 # Clone repository
 git clone https://github.com/awadhesh95pandey/AI-Gateway-GCP.git
 cd AI-Gateway-GCP
 
-# Use production configuration
+# Use simple configuration
+cp helm-chart/values-simple.yaml values-custom.yaml
+
+# Configure your GCP project and credentials
+# Then deploy:
+helm install litellm ./helm-chart \
+  --values values-custom.yaml \
+  --namespace litellm \
+  --create-namespace \
+  --wait
+```
+
+📖 **See [QUICK-DEPLOYMENT.md](QUICK-DEPLOYMENT.md) for step-by-step setup guide**
+
+## 🏭 Production Deployment (Advanced)
+
+For production deployments with guardrails, monitoring, and Kong integration:
+
+```bash
+# Use production configuration (requires Prometheus Operator)
 cp helm-chart/values-production.yaml values-custom.yaml
 
 # Configure your settings (see PRODUCTION-DEPLOYMENT.md)

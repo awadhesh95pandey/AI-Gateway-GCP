@@ -1,0 +1,120 @@
+# Simple LiteLLM Gateway Configuration
+# This configuration disables advanced features for easy deployment
+
+global:
+  namespace: litellm
+
+# LiteLLM Gateway configuration
+litellm:
+  image:
+    repository: ghcr.io/berriai/litellm
+    tag: "main-latest"
+    pullPolicy: Always
+
+  replicaCount: 1
+
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 4000
+    targetPort: 4000
+
+  # Environment variables
+  env:
+    LITELLM_MASTER_KEY: "sk-your-secure-key"  # CHANGE THIS
+    LITELLM_LOG: "True"
+    UI_USERNAME: "admin"
+    UI_PASSWORD: "your-secure-password"  # CHANGE THIS
+
+  # Model configuration
+  config:
+    model_list:
+      - model_name: gemini-pro
+        litellm_params:
+          model: vertex_ai/gemini-pro
+          vertex_project: ""  # SET YOUR GCP PROJECT ID
+          vertex_location: "us-central1"
+
+    general_settings:
+      master_key: "sk-your-secure-key"  # CHANGE THIS
+      database_url: ""  # Will be constructed from postgres values
+      ui_username: "admin"
+      ui_password: "your-secure-password"  # CHANGE THIS
+
+    litellm_settings:
+      drop_params: true
+      set_verbose: true
+
+  # Resource limits
+  resources:
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+
+  # Health checks
+  healthCheck:
+    enabled: true
+    livenessProbe:
+      httpGet:
+        path: /health/liveliness
+        port: 4000
+      initialDelaySeconds: 30
+      periodSeconds: 10
+    readinessProbe:
+      httpGet:
+        path: /health/readiness
+        port: 4000
+      initialDelaySeconds: 5
+      periodSeconds: 5
+
+  # Auto-scaling (disabled for simplicity)
+  autoscaling:
+    enabled: false
+
+# PostgreSQL database
+postgresql:
+  enabled: true
+  auth:
+    database: "litellm"
+    username: "litellm"
+    password: "your-secure-db-password"  # CHANGE THIS
+  primary:
+    persistence:
+      enabled: true
+      size: "20Gi"
+
+# Vertex AI configuration
+vertexAI:
+  projectId: ""  # SET YOUR GCP PROJECT ID
+  serviceAccountKey: ""  # SET YOUR BASE64 ENCODED SERVICE ACCOUNT KEY
+
+# Monitoring (disabled for simplicity)
+monitoring:
+  enabled: false
+
+# Redis (disabled for simplicity)
+redis:
+  enabled: false
+
+# Network policies (disabled for simplicity)
+networkPolicy:
+  enabled: false
+
+# Pod disruption budget (disabled for simplicity)
+podDisruptionBudget:
+  enabled: false
+
+# Security context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+# Node selector, affinity, and tolerations
+nodeSelector: {}
+affinity: {}
+tolerations: []
+
